@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密码学入门</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #486dbc;
+            color: black;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .floating-circle {
+            position: fixed;
+            pointer-events: none;
+            border-radius: 50%;
+            filter: blur(80px);
+            transition: transform 0.1s linear;
+            z-index: 0;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(46, 204, 113, 0.25);
+            border: 2px solid #2ecc71;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button:hover {
+            background: rgba(46, 204, 113, 0.4);
+            border-color: #a5dcb0;
+            transform: translateX(-3px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 50px;
+            font-weight: bold;
+            background: rgba(223, 236, 226, 0.9);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            color: #fafafa;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        .content-section {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+        }
+
+        .content-title {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #a5dcb0;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .divider {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg,#a5dcb0 0%, rgba(90, 240, 255, 0.1) 100%);
+            margin-bottom: 20px;
+        }
+
+        .content-text {
+            font-size: 1.05em;
+            line-height: 1.8;
+            color: #d0d0d0;
+            text-align: left;
+        }
+
+        .content-text p {
+            margin-bottom: 15px;
+        }
+
+        .content-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .puzzle-container {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+
+        .puzzle-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+            justify-content: space-between;
+            text-decoration: none;
+        }
+
+        .puzzle-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border: 3px solid rgba(90, 240, 255, 0.5);
+            transform: translateX(3px);
+        }
+
+        .puzzle-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .puzzle-name {
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #eae2c4;
+            text-align: left;
+            margin-left: 5px;
+        }
+
+        .progress-badge {
+            font-size: 0.95em;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 40px;
+            background: rgba(165, 220, 176, 0.15);
+            color: #b3f0c0;
+            border: 1px solid rgba(165, 220, 176, 0.3);
+            letter-spacing: 0.3px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            margin-left: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .progress-badge.high {
+            background: rgba(90, 240, 255, 0.2);
+            color: #c3f0ff;
+            border-color: #5af0ff;
+        }
+
+        .progress-badge.complete {
+            background: rgba(165, 220, 176, 0.4);
+            color: #ffffff;
+            border-color: #a5dcb0;
+            font-weight: 600;
+        }
+
+        .progress-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(165, 220, 176, 0.95);
+            color: #1a2a3a;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 9999;
+            font-size: 1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-left: 4px solid #2ecc71;
+            backdrop-filter: blur(5px);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .reset-all-btn {
+            background: rgba(231, 76, 60, 0.8);
+            border: 2px solid #e74c3c;
+            padding: 12px 30px;
+            border-radius: 40px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 30px auto 0;
+            display: block;
+            width: fit-content;
+            backdrop-filter: blur(5px);
+            border: none;
+        }
+
+        .reset-all-btn:hover {
+            background: rgba(231, 76, 60, 0.95);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-circle" style="width: 250px; height: 250px; background: #3c65a0; top: 20px; left: 10%; opacity:0.5;"></div>
+    <div class="floating-circle" style="width: 400px; height: 400px; background: #264d82; bottom: 0; right: 0; opacity:0.4;"></div>
+
+    <div class="container">
+        <h1 class="title">密码学入门</h1>
+        
+        <div class="content-section">
+            <h2 class="content-title">简介</h2>
+            <div class="divider"></div>
+            <div class="content-text">
+                本网站主要涉及一些古典密码的加密与解密。
+            </div>
+        </div>
+
+        <div class="puzzle-container">
+            <a href="a1.html" class="puzzle-item">
+                <span class="puzzle-name">隐写术</span>
+                <span class="progress-badge" id="progress-隐写术">0/4</span>
+            </a>
+            <a href="a2.html" class="puzzle-item">
+                <span class="puzzle-name">置换密码</span>
+                <span class="progress-badge" id="progress-置换密码">0/4</span>
+            </a>
+            <a href="a3.html" class="puzzle-item">
+                <span class="puzzle-name">代换密码</span>
+                <span class="progress-badge" id="progress-代换密码">0/4</span>
+            </a>
+        </div>
+
+        <div class="puzzle-container" style="margin-top: 30px;">
+            <a href="test.html" class="puzzle-item">
+                <span class="puzzle-name">古典密码测试</span>
+                <span class="progress-badge" id="progress-古典密码测试">0/7</span>
+            </a>
+        </div>
+
+        <div class="button-container">
+            <button class="reset-all-btn" onclick="resetAllProgress()">重置所有进度</button>
+        </div>
+
+        <br><br>
+        <p class="subtitle">
+            Special Thanks To 
+            <a href="https://nationalstudentpuzzlehunt.github.io/NSPH_archive/index.html" 
+                style="text-decoration: none; color: inherit;" 
+                target="_blank" 
+                rel="noopener noreferrer">
+                NSPH
+            </a>
+        </p>
+    </div>
+
+    <script>
+    const ProgressManager = {
+        STORAGE_KEY: 'crypto_chapter_progress',
+        DRAFT_KEY: 'crypto_chapter_drafts',
+        TEST_MAX_KEY: 'crypto_test_max',  // test页面历史最高正确数存储键
+        
+        chapterTotals: {
+            '隐写术': 4,
+            '置换密码': 4,
+            '代换密码': 4,
+            '古典密码测试': 7
+        },
+
+        getAllProgress() {
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            const defaultProgress = {};
+            for (let chapter in this.chapterTotals) {
+                defaultProgress[chapter] = {
+                    current: 0,
+                    total: this.chapterTotals[chapter]
+                };
+            }
+            this.saveAllProgress(defaultProgress);
+            return defaultProgress;
+        },
+
+        saveAllProgress(progress) {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(progress));
+        },
+
+        getChapterProgress(chapterName) {
+            const all = this.getAllProgress();
+            return all[chapterName] || { current: 0, total: this.chapterTotals[chapterName] || 0 };
+        },
+
+        refreshDisplay() {
+            const progress = this.getAllProgress();
+            for (let chapter in this.chapterTotals) {
+                const badge = document.getElementById(`progress-${chapter}`);
+                if (badge && progress[chapter]) {
+                    const { current, total } = progress[chapter];
+                    badge.textContent = `${current}/${total}`;
+                    badge.classList.remove('high', 'complete');
+                    if (current === total) {
+                        badge.classList.add('complete');
+                    } else if (current / total >= 0.7) {
+                        badge.classList.add('high');
+                    }
+                    badge.style.opacity = current === 0 ? '0.6' : '1';
+                }
+            }
+        },
+
+        showMessage(msg, type = 'normal') {
+            const toast = document.createElement('div');
+            toast.className = 'progress-toast';
+            if (type === 'success') {
+                toast.style.background = 'rgba(46, 204, 113, 0.95)';
+                toast.style.color = '#fff';
+            } else if (type === 'info') {
+                toast.style.background = 'rgba(52, 152, 219, 0.95)';
+                toast.style.color = '#fff';
+            }
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        },
+
+        // 重置所有章节进度（完全重置）
+        resetAllProgress() {
+            if (confirm('确定要重置所有章节的进度吗？此操作将清除所有答题记录和测试历史最高分，不可恢复。')) {
+                // 1. 重置章节进度数据
+                const resetProgress = {};
+                for (let chapter in this.chapterTotals) {
+                    resetProgress[chapter] = {
+                        current: 0,
+                        total: this.chapterTotals[chapter]
+                    };
+                }
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(resetProgress));
+                
+                // 2. 清除所有章节的永久正确标记和完成标记
+                for (let chapter in this.chapterTotals) {
+                    const total = this.chapterTotals[chapter];
+                    for (let i = 1; i <= total; i++) {
+                        localStorage.removeItem(`${chapter}_q${i}_completed`);
+                        localStorage.removeItem(`${chapter}_q${i}_ever_correct`);
+                    }
+                }
+                
+                // 3. 清除所有草稿数据
+                localStorage.removeItem(this.DRAFT_KEY);
+                
+                // 4. 清除test页面的历史最高正确数
+                localStorage.removeItem(this.TEST_MAX_KEY);
+                
+                // 5. 刷新页面显示
+                this.refreshDisplay();
+                
+                // 6. 显示提示消息
+                this.showMessage('所有进度和测试历史记录已重置', 'info');
+                
+                console.log('所有进度和测试历史记录已完全重置');
+            }
+        }
+    };
+
+    function resetAllProgress() {
+        ProgressManager.resetAllProgress();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        ProgressManager.refreshDisplay();
+    });
+
+    window.ProgressManager = ProgressManager;
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === ProgressManager.STORAGE_KEY) {
+            ProgressManager.refreshDisplay();
+        }
+    });
+
+    setInterval(() => {
+        ProgressManager.refreshDisplay();
+    }, 30000);
+    </script>
+</body>
+</html>

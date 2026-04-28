@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>置换密码 - 密码学入门</title>
+    <style>
+        /* 与 a1.html 相同的样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #486dbc;
+            color: black;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .floating-circle {
+            position: fixed;
+            pointer-events: none;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(46, 204, 113, 0.25);
+            border: 2px solid #2ecc71;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button:hover {
+            background: rgba(46, 204, 113, 0.4);
+            border-color: #a5dcb0;
+            transform: translateX(-3px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            background: rgba(223, 236, 226, 0.9);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .progress-header {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+
+        .progress-info {
+            color: #a5dcb0;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 200px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a5dcb0, #5af0ff);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .knowledge-card {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            border-left: 4px solid #5af0ff;
+        }
+
+        .knowledge-title {
+            font-size: 1.5em;
+            color: #a5dcb0;
+            margin-bottom: 15px;
+        }
+
+        .knowledge-content {
+            color: #d0d0d0;
+            line-height: 1.8;
+            font-size: 1.05em;
+            min-height: 100px;
+        }
+
+        .knowledge-content p {
+            margin-bottom: 15px;
+        }
+
+        .question-card {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            border-left: 4px solid #a5dcb0;
+            transition: all 0.3s;
+        }
+
+        .question-card.completed {
+            border-left-color: #4a90e2;
+            background: rgba(33, 37, 41, 0.9);
+            opacity: 1;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-number {
+            font-size: 1.2em;
+            color: #a5dcb0;
+            font-weight: 600;
+        }
+
+        .question-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.1);
+            color: #eae2c4;
+        }
+
+        .question-status.completed {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+
+        .question-text {
+            color: #eae2c4;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #5af0ff;
+        }
+
+        .option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #a5dcb0;
+        }
+
+        .option label {
+            color: #d0d0d0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .fill-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #f0f0f0;
+            font-size: 1em;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .fill-input:focus {
+            border-color: #a5dcb0;
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .question-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .btn-submit {
+            background: #2c4c6c;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #4f7da0;
+        }
+
+        .btn-submit:hover {
+            background: #316f94;
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:disabled {
+            background: #4a4a4a;
+            cursor: not-allowed;
+            transform: none;
+            border-color: #666;
+        }
+
+        .question-feedback {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+
+        .feedback-correct {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+
+        .feedback-incorrect {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .explanation-area {
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: rgba(90, 240, 255, 0.1);
+            border-left: 4px solid #5af0ff;
+            border-radius: 8px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .explanation-content {
+            color: #d0f0ff;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .explanation-content strong {
+            color: #a5dcb0;
+            font-weight: 600;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reset-chapter-btn {
+            background: rgba(231, 76, 60, 0.8);
+            border: 2px solid #e74c3c;
+            padding: 12px 30px;
+            border-radius: 40px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px auto;
+            display: block;
+            width: fit-content;
+            backdrop-filter: blur(5px);
+        }
+
+        .reset-chapter-btn:hover {
+            background: rgba(231, 76, 60, 0.95);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+        }
+
+        .completion-message {
+            background: linear-gradient(135deg, #2c4c6c, #1a2a3a);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+            border: 2px solid #a5dcb0;
+        }
+
+        .completion-message h2 {
+            color: #a5dcb0;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .completion-message p {
+            color: #d0d0d0;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .btn-return {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #a5dcb0;
+            color: #1a2a3a;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-return:hover {
+            background: #b8e6c4;
+            transform: scale(1.05);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-circle" style="width: 300px; height: 300px; background: #3c65a0; top: 10%; left: 5%; opacity:0.5;"></div>
+    <div class="floating-circle" style="width: 400px; height: 400px; background: #264d82; bottom: 10%; right: 5%; opacity:0.4;"></div>
+
+    <div class="container">
+        <a href="main.html" class="back-button" id="backBtn">← 返回主界面</a>
+        <h1 class="title">置换密码</h1>
+
+        <div class="progress-header">
+            <div class="progress-info" id="progressText">0/4 已完成</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <!-- 知识点1 -->
+        <div class="knowledge-card">
+            <div class="knowledge-title">知识点1</div>
+            <div class="knowledge-content">
+                <p>置换密码又称换位密码，是一种基于字符顺序调换的古典加密方法，属于字符变换型密码算法。其核心特征为保持明文字符不变，仅通过调整排列位置生成密文。栅栏密码就是一种置换密码。</p>
+            </div>
+        </div>
+
+        <!-- 题目1 - 选择题 -->
+        <div class="question-card" id="question1" data-question="1">
+            <div class="question-header">
+                <span class="question-number">题目1</span>
+                <span class="question-status" id="status1">未完成</span>
+            </div>
+            <div class="question-text">
+                置换密码又称什么？
+            </div>
+            <div class="options">
+                <div class="option">
+                    <input type="radio" name="q1" id="q1a" value="1">
+                    <label for="q1a">1. 加密</label>
+                </div>
+                <div class="option">
+                    <input type="radio" name="q1" id="q1b" value="2">
+                    <label for="q1b">2. 隐写术</label>
+                </div>
+                <div class="option">
+                    <input type="radio" name="q1" id="q1c" value="3">
+                    <label for="q1c">3. 解密</label>
+                </div>
+                <div class="option">
+                    <input type="radio" name="q1" id="q1d" value="4">
+                    <label for="q1d">4. 代换密码</label>
+                </div>
+            </div>
+            <div class="question-footer">
+                <button class="btn-submit" onclick="submitAnswer(1, '4', 'choice')">提交答案</button>
+                <div class="question-feedback" id="feedback1"></div>
+            </div>
+            <div class="explanation-area" id="explanation1" style="display: none;">
+                <div class="explanation-content">
+                    <strong>解析：</strong> 置换密码又称换位密码。
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识点2 -->
+        <div class="knowledge-card">
+            <div class="knowledge-title">知识点2</div>
+            <div class="knowledge-content">
+                <p>所谓栅栏密码，就是把要加密的明文分成k栏，然后把每栏连起来，形成一段无规律的话。不过栅栏密码本身有一个潜规则，就是组成栅栏的字母一般不会太多。</p>
+                <p>加密：1、把将要传递的信息中的字母交替排成上下k栏（这里k=2）。
+                <br>T E O G S D Y U T A E N N
+                <br>H L N E T A M S H V A E D
+                <br>2、 密文：将下面一行字母排在上面一行的后边。
+                <br>TEOGSDYUTAENN HLNETAMSHVAED
+                <br>解密：
+                <br>先将密文分为k栏这里（k=2）。
+                <br>T E O G S D Y U T A E N N
+                <br>H L N E T A M S H V A E D
+                <br>再按上下上下的顺序组合成一句话
+                <br>明文：THE LONGEST DAY MUST HAVE AN END</p>
+            </div>
+        </div>
+
+        <!-- 题目2 - 填空题 -->
+        <div class="question-card" id="question2" data-question="2">
+            <div class="question-header">
+                <span class="question-number">题目2</span>
+                <span class="question-status" id="status2">未完成</span>
+            </div>
+            <div class="question-text">
+                hlowrdel ol
+                <br>(小写英文单词，若有多个单词用一个空格分开)
+            </div>
+            <input type="text" class="fill-input" id="answer2" placeholder="输入答案">
+            <div class="question-footer">
+                <button class="btn-submit" onclick="submitAnswer(2, 'hello world', 'fill')">提交答案</button>
+                <div class="question-feedback" id="feedback2"></div>
+            </div>
+            <div class="explanation-area" id="explanation2" style="display: none;">
+                <div class="explanation-content">
+                    <strong>解析：</strong> <br>h l o w r <br>e l &nbsp&nbsp o l
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识点3 -->
+        
+
+        <!-- 题目3 - 填空题 -->
+        <div class="question-card" id="question3" data-question="3">
+            <div class="question-header">
+                <span class="question-number">题目3</span>
+                <span class="question-status" id="status3">未完成</span>
+            </div>
+            <div class="question-text">
+                artxxisnxxnoit<br>(小写英文单词，若有多个单词用一个空格分开)
+            </div>
+            <input type="text" class="fill-input" id="answer3" placeholder="输入答案">
+            <div class="question-footer">
+                <button class="btn-submit" onclick="submitAnswer(3, 'transition', 'fill')">提交答案</button>
+                <div class="question-feedback" id="feedback3"></div>
+            </div>
+            <div class="explanation-area" id="explanation3" style="display: none;">
+                <div class="explanation-content">
+                    <strong>解析：</strong> <br>
+                    artxxisnxxnoit<br>
+                    tra &nbsp&nbspnsi &nbsp &nbsption &rarr; transition
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识点4 -->
+        <div class="knowledge-card">
+            <div class="knowledge-title">知识点4</div>
+            <div class="knowledge-content">
+                <p>有限集 X 上的运算满足σ：X &rarr; X 是一个双射函数，那么称 X 是一个置换</p>
+                <p>若 σ 是一个置换，&forall;x&isin;X ,存在唯一的x&prime;&isin;X,使得&sigma;(x)=x&prime;。同理可定义逆置换&sigma;&prime;: X &rarr; X 。
+                    <p>设有集合  X = {1, 2, 3, 4, 5, 6, 7, 8} ，</p>
+                <p>
+                &sigma;(1) = 2 ，&sigma;(2) = 5，&sigma;(3) = 3，&sigma;(4) = 6，
+                &sigma;(5) = 1，&sigma;(6) = 8，&sigma;(7) = 4，&sigma;(8) = 7。
+                </p>
+                <p>则置换为&sigma;={2 3 3 6 1 8 4 7}。</p>
+                <p>因为置换可以简单用对换表示，所以上述置换 &sigma;可以形式化为表示为对换的乘积，即</p>
+                <p>&sigma;=(125)(3)(4687)=(125)(4687),其逆置换&sigma;&prime;=(152)(4786)。</p>
+                <strong>置换密码</strong>：设 n 为正整数, M, C, K 分别为明文空间、密文空间和密钥空间。则K 是定义在 {1, 2, ..., n} 的所有置换组成的集合。对任何一个密钥 q &isin; K，即任一个置换，定义置换密码为</p>
+                <p>e<sub>&sigma;</sub>(x<sub>1</sub>, x<sub>2</sub>, ..., x<sub>n</sub>) = (x<sub>&sigma;(1)</sub>, x<sub>&sigma;(2)</sub>, ..., x<sub>&sigma;(n)</sub>)</p>
+                <p>d<sub>&sigma;<sup>-1</sup></sub>(y<sub>1</sub>, y<sub>2</sub>, ..., y<sub>n</sub>) = (y<sub>&sigma;<sup>-1</sup>(1)</sub>, y<sub>&sigma;<sup>-1</sup>(2)</sub>, ..., y<sub>&sigma;<sup>-1</sup>(n)</sub>)</p>
+                <p>其中，&sigma;<sup>-1</sup> 是 &sigma; 的逆置换，密钥空间 K 的大小为 n!。</p>
+
+                <p>周期置换密码是将明文 P 按固定长度 m 分组，然后对每组的字符串按 (1, 2, …, m) 的置换 σ 重新排列位置从而得到密文。解密时同样对密文 c 按长度 m 分组，并按 σ 的逆置换 σ⁻¹ 把每组重新排列，从而得到明文 P。</p>
+                <p>不妨设明文 P 为“Digital Copyright Protection Laboratory, Beijing University of Printing”，σ = (1 5 6 2 3)。</p>
+                <p>首先把明文 P 分成 6 个字母一组为<br>(Digita) (lCopyr) (ightPr) (otecti) (onLabo) (ratory) (Beijin) (gUnive) (rsityo) (fPrint) (ing&nbsp;&nbsp;&nbsp;)</p>
+                <p>然后分别对每组中的 6 个字母使用加密变换 σ 为<br>(gaiiDt) (orCply) (hrgtiP) (eitcot) (Lonaob) (tyaorr) (inejBi) (neUigv) (iostry) (rtPifn) (g n i )</p>
+                <p>从而得到最终的密文 c = “gaiiDtOrCplyhrgtiPeitcotLonaobtyaorrinejBineUigviostryrtPifng n i ”。</p>
+                <p>同理，解密与加密类似，由加密置换 σ = (1 5 6 2 3)，得到解密置换 σ⁻¹ = (1 3 2 6 5)。将密文序列分成6个字母一组为<br>(gaiiDt) (orCply) (hrgtiP) (eitcot) (Lonaob) (tyaorr) (inejBi) (neUigv) (iostry) (rtPifn) (g n i )</p>
+                <p>接着对上述序列中的每个子串使用解密密钥置换位置为<br>(Digita) (lCopyr) (ightPr) (otecti) (onLabo) (ratory) (Beijin) (gUnive) (rsityo) (fPrint) (ing&nbsp;&nbsp;&nbsp;)</p>
+                <p>从而得到明文序列 P 为“Digital Copyright Protection Laboratory, Beijing University of Printing”。
+                </p>
+            </div>
+        </div>
+
+        <!-- 题目4 - 填空题 -->
+        <div class="question-card" id="question4" data-question="4">
+            <div class="question-header">
+                <span class="question-number">题目4</span>
+                <span class="question-status" id="status4">未完成</span>
+            </div>
+            <div class="question-text">
+                Cprtyoagprhsytihoeufntdiaofnmoordnedtiigaelcsutryi  &nbsp; &sigma;=(2 3 5 4)  &nbsp; m=6<br>（提交第四个单词）
+            </div>
+            <input type="text" class="fill-input" id="answer4" placeholder="输入答案">
+            <div class="question-footer">
+                <button class="btn-submit" onclick="submitAnswer(4, 'foundation', 'fill')">提交答案</button>
+                <div class="question-feedback" id="feedback4"></div>
+            </div>
+            <div class="explanation-area" id="explanation4" style="display: none;">
+                <div class="explanation-content">
+                    <strong>解析：</strong> <br>
+                    (Cprty) (oagpr) (hsyti) (hoeuf) (ntdia) (ofnmo) (ordne) (dtiig) (aelcs) (utryi)<br>
+                    (Crypt) (ograp) (hyist) (hefou) (ndati) (onofm) (odern) (digit) (alsec) (urity)<br>
+                    &rarr;Cryptography is the foundation of modern digital security
+                </div>
+            </div>
+        </div>
+
+        <!-- 按钮容器 -->
+        <div class="button-container">
+            <button class="reset-chapter-btn" onclick="resetChapter()">重置本章进度</button>
+        </div>
+
+        <div class="completion-message" id="completionMessage" style="display: none;">
+            <h2>恭喜完成本章！</h2>
+            <p>你已完成《置换密码》章节的所有题目</p>
+            <a href="main.html" class="btn-return">返回课程列表</a>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'crypto_chapter_progress';
+        const DRAFT_KEY = 'crypto_chapter_drafts';
+        const CHAPTER_NAME = '置换密码';
+        const TOTAL_QUESTIONS = 4;
+        
+        let questionStatus = {
+            1: false,
+            2: false,
+            3: false,
+            4: false
+        };
+        
+        // 记录每道题是否曾经答对过（永久标记）
+        let everCorrect = {
+            1: false,
+            2: false,
+            3: false,
+            4: false
+        };
+        
+        // 草稿状态（未提交的选项/输入）
+        let drafts = {
+            1: null,  // 选择题：存储选中的value
+            2: '',    // 填空题：存储输入的内容
+            3: '',
+            4: ''
+        };
+        
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const progress = JSON.parse(saved);
+                    if (progress[CHAPTER_NAME]) {
+                        const completed = progress[CHAPTER_NAME].current;
+                        for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                            questionStatus[i] = i <= completed;
+                        }
+                    }
+                }
+                
+                // 加载永久正确标记
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const everCorrectValue = localStorage.getItem(`${CHAPTER_NAME}_q${i}_ever_correct`);
+                    if (everCorrectValue === 'true') {
+                        everCorrect[i] = true;
+                    }
+                }
+                
+                // 兼容旧的完成标记
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    const questionCompleted = localStorage.getItem(`${CHAPTER_NAME}_q${i}_completed`);
+                    if (questionCompleted === 'true') {
+                        questionStatus[i] = true;
+                        everCorrect[i] = true;
+                    }
+                }
+                
+                // 加载草稿（未提交的选项/输入）
+                const draftsSaved = localStorage.getItem(DRAFT_KEY);
+                if (draftsSaved) {
+                    const allDrafts = JSON.parse(draftsSaved);
+                    if (allDrafts[CHAPTER_NAME]) {
+                        drafts = allDrafts[CHAPTER_NAME];
+                    }
+                }
+                
+                updateAllUI();
+                restoreDrafts(); // 恢复草稿到界面
+            } catch (e) {
+                console.error('加载进度失败:', e);
+            }
+        }
+        
+        function saveProgress() {
+            try {
+                let completedCount = Object.values(questionStatus).filter(v => v).length;
+                
+                let progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                progress[CHAPTER_NAME] = {
+                    current: completedCount,
+                    total: TOTAL_QUESTIONS
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+                
+                // 保存每道题的完成状态和永久正确标记
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    localStorage.setItem(`${CHAPTER_NAME}_q${i}_completed`, questionStatus[i] ? 'true' : 'false');
+                    localStorage.setItem(`${CHAPTER_NAME}_q${i}_ever_correct`, everCorrect[i] ? 'true' : 'false');
+                }
+                
+                updateAllUI();
+                
+                if (window.opener && window.opener.ProgressManager) {
+                    window.opener.ProgressManager.refreshDisplay();
+                }
+                
+                window.dispatchEvent(new Event('storage'));
+            } catch (e) {
+                console.error('保存进度失败:', e);
+            }
+        }
+        
+        // 保存草稿（未提交的选项/输入）
+        function saveDrafts() {
+            try {
+                // 收集当前界面的草稿
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    if (i === 1) {
+                        // 选择题
+                        const selected = document.querySelector(`input[name="q1"]:checked`);
+                        if (selected) {
+                            drafts[1] = selected.value;
+                        } else {
+                            drafts[1] = null;
+                        }
+                    } else {
+                        // 填空题
+                        const input = document.getElementById(`answer${i}`);
+                        if (input) {
+                            drafts[i] = input.value;
+                        }
+                    }
+                }
+                
+                // 保存到 localStorage
+                let allDrafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+                allDrafts[CHAPTER_NAME] = drafts;
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(allDrafts));
+            } catch (e) {
+                console.error('保存草稿失败:', e);
+            }
+        }
+        
+        // 恢复草稿到界面
+        function restoreDrafts() {
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                if (i === 1 && drafts[1]) {
+                    // 恢复选择题选项
+                    const radioToCheck = document.querySelector(`input[name="q1"][value="${drafts[1]}"]`);
+                    if (radioToCheck) {
+                        radioToCheck.checked = true;
+                    }
+                } else if (i > 1) {
+                    // 恢复填空题输入
+                    const input = document.getElementById(`answer${i}`);
+                    if (input && drafts[i] !== undefined) {
+                        input.value = drafts[i];
+                    }
+                }
+            }
+        }
+        
+        function updateAllUI() {
+            const completedCount = Object.values(questionStatus).filter(v => v).length;
+            
+            document.getElementById('progressText').textContent = `${completedCount}/${TOTAL_QUESTIONS} 已完成`;
+            
+            const progressPercent = (completedCount / TOTAL_QUESTIONS) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+            
+            for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                const statusEl = document.getElementById(`status${i}`);
+                const questionCard = document.getElementById(`question${i}`);
+                const explanationEl = document.getElementById(`explanation${i}`);
+                
+                if (statusEl) {
+                    if (everCorrect[i]) {
+                        statusEl.textContent = '已完成';
+                        statusEl.className = 'question-status completed';
+                        if (questionCard) {
+                            questionCard.classList.add('completed');
+                        }
+                        if (explanationEl) {
+                            explanationEl.style.display = 'block';
+                        }
+                    } else {
+                        statusEl.textContent = '未完成';
+                        statusEl.className = 'question-status';
+                        if (questionCard) {
+                            questionCard.classList.remove('completed');
+                        }
+                        if (explanationEl) {
+                            explanationEl.style.display = 'none';
+                        }
+                    }
+                }
+            }
+            
+            if (completedCount === TOTAL_QUESTIONS) {
+                document.getElementById('completionMessage').style.display = 'block';
+            } else {
+                document.getElementById('completionMessage').style.display = 'none';
+            }
+        }
+        
+        function submitAnswer(questionNum, correctAnswer, type) {
+            let userAnswer = '';
+            
+            if (type === 'choice') {
+                const selected = document.querySelector(`input[name="q${questionNum}"]:checked`);
+                if (!selected) {
+                    alert('请先选择一个答案！');
+                    return;
+                }
+                userAnswer = selected.value;
+            } else {
+                const inputField = document.getElementById(`answer${questionNum}`);
+                if (!inputField || !inputField.value.trim()) {
+                    alert('请输入答案！');
+                    return;
+                }
+                userAnswer = inputField.value.trim();
+            }
+            
+            const feedbackEl = document.getElementById(`feedback${questionNum}`);
+            const explanationEl = document.getElementById(`explanation${questionNum}`);
+            
+            if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                feedbackEl.textContent = '回答正确！';
+                feedbackEl.className = 'question-feedback feedback-correct';
+                
+                if (explanationEl) {
+                    explanationEl.style.display = 'block';
+                }
+                
+                // 标记为永久正确和当前完成
+                everCorrect[questionNum] = true;
+                questionStatus[questionNum] = true;
+                saveProgress();
+                
+                // 提交后清除该题的草稿
+                if (type === 'choice') {
+                    drafts[questionNum] = null;
+                } else {
+                    drafts[questionNum] = '';
+                }
+                saveDrafts();
+                
+                setTimeout(() => {
+                    alert(`第${questionNum}题答对了！`);
+                }, 100);
+            } else {
+                feedbackEl.textContent = '回答错误，再试试吧！';
+                feedbackEl.className = 'question-feedback feedback-incorrect';
+                
+                // 即使答错，也不改变已完成状态（如果曾经答对过）
+                
+                setTimeout(() => {
+                    feedbackEl.textContent = '';
+                    feedbackEl.className = 'question-feedback';
+                }, 3000);
+            }
+        }
+
+        function resetChapter() {
+            if (confirm('确定要重置本章进度吗？所有题目将变为未完成状态。')) {
+                for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+                    questionStatus[i] = false;
+                    everCorrect[i] = false;
+                    
+                    if (i === 1) {
+                        // 清空选择题
+                        drafts[i] = null;
+                        const radioButtons = document.querySelectorAll(`input[name="q1"]`);
+                        radioButtons.forEach(radio => {
+                            radio.checked = false;
+                        });
+                    } else {
+                        // 清空填空题
+                        drafts[i] = '';
+                        const input = document.getElementById(`answer${i}`);
+                        if (input) {
+                            input.value = '';
+                        }
+                    }
+                    
+                    const feedbackEl = document.getElementById(`feedback${i}`);
+                    if (feedbackEl) {
+                        feedbackEl.textContent = '';
+                        feedbackEl.className = 'question-feedback';
+                    }
+                    
+                    const explanationEl = document.getElementById(`explanation${i}`);
+                    if (explanationEl) {
+                        explanationEl.style.display = 'none';
+                    }
+                }
+                
+                saveProgress();
+                saveDrafts();
+                alert('本章进度已重置');
+            }
+        }
+        
+        // 监听输入变化，自动保存草稿
+        function setupDraftListeners() {
+            // 监听选择题变化
+            const radioButtons = document.querySelectorAll('input[name="q1"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    saveDrafts();
+                });
+            });
+            
+            // 监听填空题输入
+            for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                const input = document.getElementById(`answer${i}`);
+                if (input) {
+                    input.addEventListener('input', () => {
+                        saveDrafts();
+                    });
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            setupDraftListeners();
+        });
+        
+        // 返回按钮点击时保存草稿
+        document.getElementById('backBtn').addEventListener('click', function(e) {
+            saveDrafts();
+        });
+        
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_KEY) {
+                loadProgress();
+            }
+        });
+        
+        // 页面卸载前保存草稿
+        window.addEventListener('beforeunload', function() {
+            saveDrafts();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古典密码测试 - 密码学入门</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #486dbc;
+            color: black;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .floating-circle {
+            position: fixed;
+            pointer-events: none;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(46, 204, 113, 0.25);
+            border: 2px solid #2ecc71;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button:hover {
+            background: rgba(46, 204, 113, 0.4);
+            border-color: #a5dcb0;
+            transform: translateX(-3px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            background: rgba(223, 236, 226, 0.9);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            color: #fafafa;
+            margin-bottom: 30px;
+        }
+
+        .test-info {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+
+        .test-info-text {
+            color: #a5dcb0;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .test-status {
+            padding: 8px 16px;
+            background: rgba(165, 220, 176, 0.15);
+            border: 1px solid #a5dcb0;
+            border-radius: 30px;
+            color: #a5dcb0;
+        }
+
+        .knowledge-card {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border-left: 4px solid #5af0ff;
+        }
+
+        .knowledge-title {
+            font-size: 1.3em;
+            color: #a5dcb0;
+            margin-bottom: 10px;
+        }
+
+        .knowledge-content {
+            color: #d0d0d0;
+            line-height: 1.6;
+        }
+
+        .questions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .question-card {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-left: 4px solid #a5dcb0;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .question-number {
+            font-size: 1.1em;
+            color: #a5dcb0;
+            font-weight: 600;
+        }
+
+        .question-status {
+            font-size: 0.9em;
+            color: #eae2c4;
+        }
+
+        .question-text {
+            color: #eae2c4;
+            font-size: 1em;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #5af0ff;
+        }
+
+        .option input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #a5dcb0;
+        }
+
+        .option label {
+            color: #d0d0d0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .fill-input {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #f0f0f0;
+            font-size: 1em;
+            transition: all 0.2s;
+        }
+
+        .fill-input:focus {
+            border-color: #a5dcb0;
+            outline: none;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .submit-area {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid #a5dcb0;
+        }
+
+        .btn-submit-all {
+            background: linear-gradient(135deg, #2c4c6c, #1e3a5a);
+            border: 2px solid #a5dcb0;
+            padding: 15px 50px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.3em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .btn-submit-all:hover {
+            background: linear-gradient(135deg, #316f94, #2a4a6a);
+            border-color: #5af0ff;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(90, 240, 255, 0.5);
+        }
+
+        .btn-submit-all:disabled {
+            background: #4a4a4a;
+            border-color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 重新尝试答题按钮 - 橙色样式 */
+        .retry-test-btn {
+            background: rgba(243, 156, 18, 0.9);
+            border: 2px solid #f39c12;
+            padding: 12px 30px;
+            border-radius: 40px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            display: inline-block;
+            backdrop-filter: blur(5px);
+            display: none; /* 默认隐藏 */
+        }
+
+        .retry-test-btn:hover {
+            background: rgba(243, 156, 18, 1);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
+        }
+
+        .explanation-area {
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: rgba(90, 240, 255, 0.1);
+            border-left: 4px solid #5af0ff;
+            border-radius: 8px;
+            animation: slideDown 0.3s ease;
+            display: none; /* 默认隐藏 */
+        }
+
+        .explanation-content {
+            color: #d0f0ff;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .explanation-content strong {
+            color: #a5dcb0;
+            font-weight: 600;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        .result-success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+            display: block;
+        }
+
+        .result-partial {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+            border: 1px solid #f1c40f;
+            display: block;
+        }
+
+        .result-error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            display: block;
+        }
+
+        .completion-message {
+            background: linear-gradient(135deg, #2c4c6c, #1a2a3a);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+            border: 2px solid #a5dcb0;
+        }
+
+        .completion-message h2 {
+            color: #a5dcb0;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .completion-message p {
+            color: #d0d0d0;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .btn-return {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #a5dcb0;
+            color: #1a2a3a;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-return:hover {
+            background: #b8e6c4;
+            transform: scale(1.05);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .stats-card {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            border-left: 4px solid #a5dcb0;
+        }
+
+        .stats-title {
+            font-size: 1.5em;
+            color: #a5dcb0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(165, 220, 176, 0.3);
+            display: inline-block;
+        }
+
+        /* 三列表格布局 */
+        .stats-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stats-column {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d0d0d0;
+            font-size: 1em;
+        }
+
+        .stats-item .rank {
+            color: #e67e22;
+            font-weight: bold;
+            width: 40px;
+        }
+
+        .stats-item .symbol {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 1.1em;
+            width: 50px;
+        }
+
+        .stats-item .freq {
+            font-family: monospace;
+            color: #5af0ff;
+            font-weight: 500;
+        }
+
+        .column-header {
+            color: #a5dcb0;
+            font-size: 1.1em;
+            font-weight: 600;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(165, 220, 176, 0.3);
+            text-align: center;
+        }
+
+        /* 说明区域 */
+        .note-card {
+            background: rgba(33, 37, 41, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #5af0ff;
+        }
+
+        .note-card p {
+            color: #d0d0d0;
+            line-height: 1.6;
+        }
+
+        .note-card strong {
+            color: #a5dcb0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-circle" style="width: 300px; height: 300px; background: #3c65a0; top: 10%; left: 5%; opacity:0.5;"></div>
+    <div class="floating-circle" style="width: 400px; height: 400px; background: #264d82; bottom: 10%; right: 5%; opacity:0.4;"></div>
+
+    <div class="container">
+        <a href="main.html" class="back-button" id="backBtn">← 返回课程列表</a>
+        <h1 class="title">古典密码测试</h1>
+        <div class="subtitle">共7题 · 全部答对即完成</div>
+
+        <!-- 测试状态栏 - 显示最高正确数 -->
+        <div class="test-info">
+            <span class="test-info-text" id="progressText">0/7 已完成</span>
+            <span class="test-status" id="testStatus">未完成</span>
+        </div>
+        <div class="test-info" style="margin-top: 10px; background: rgba(33, 37, 41, 0.7);">
+            <span class="test-info-text">历史最高正确数</span>
+            <span class="test-status" id="maxCorrectText">0/7</span>
+        </div>
+
+        <!-- 知识点提示 -->
+        <div class="knowledge-card">
+            <div class="knowledge-title">测试说明</div>
+            <div class="knowledge-content">
+                <p>本测试共7道题目，第一题为选择题，其余6题为填空题。</p>
+                <p>允许使用任何手段进行解密。</p>
+                <p>所有题目答案统一提交，可随时修改答案后重新提交。</p>
+                <p>全部答对后自动标记本章为完成状态，之后无法再修改答案。</p>
+                <p>页面会记录您达到过的最高正确数。</p>
+                <p>填空题<b>若有多个单词无需用空格分开</b>。</p>
+            </div>
+        </div>
+
+        <!-- 题目容器 - 竖直排列 -->
+        <div class="questions-container">
+            <!-- ===== 题目1 - 选择题 ===== -->
+            <div class="question-card" id="question1">
+                <div class="question-header">
+                    <span class="question-number">题目1（选择题）</span>
+                    <span class="question-status">请选择答案</span>
+                </div>
+                <div class="question-text">
+                    对密文 TheSE grEaT booKS TeAcH SmaRt hUmaN BaSic TRutH进行解密的得到的单词为
+                </div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1a" value="1">
+                        <label for="q1a">1. password</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1b" value="2">
+                        <label for="q1b">2. decipher</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1c" value="3">
+                        <label for="q1c">3. internet</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1d" value="4">
+                        <label for="q1d">4. security</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 题目2-7 - 填空题 ===== -->
+            <div class="question-card" id="question2">
+                <div class="question-header">
+                    <span class="question-number">题目2（填空题）</span>
+                    <span class="question-status">请输入答案</span>
+                </div>
+                <div class="question-text">
+                    栅栏密码的密文为agaangdnimsum，栏数k&isin;{2,3,4} ，求明文。
+                </div>
+                <input type="text" class="fill-input" id="answer2" placeholder="输入答案">
+            </div>
+
+            <div class="question-card" id="question3">
+                <div class="question-header">
+                    <span class="question-number">题目3（填空题）</span>
+                    <span class="question-status">请输入答案</span>
+                </div>
+                <div class="question-text">
+                    设d=4,n=9的周期置换密码的四个置换和密文如下，求明文。<br>
+                    &sigma;<sub>1</sub>=(1 3 5 2 4)(6 7 9) &nbsp;&nbsp;&sigma;<sub>2</sub>=(1 9 3 6)(2 5)(4 8 7) &nbsp;&nbsp;
+                    &sigma;<sub>3</sub>=(1 2 3 6 8)(4 9 7) &nbsp;&nbsp;&sigma;<sub>4</sub>=(1 9 3 7 4 8 6)<br>
+                    密文：thanseerg otoftefsa tllssioie faeiiccrs lthearhof htkenyroa pinafdpho xnxxsxesi<br>
+                    (提交第一个长度为7的单词)
+                </div>
+                <input type="text" class="fill-input" id="answer3" placeholder="输入答案">
+            </div>
+
+            <div class="question-card" id="question4">
+                <div class="question-header">
+                    <span class="question-number">题目4（填空题）</span>
+                    <span class="question-status">请输入答案</span>
+                </div>
+                <div class="question-text">
+                    <p>对以下的加密与解密变换称为仿射密码：<br>
+                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;加密变换:c=E<sub>a,b</sub>(m)&equiv;am+b(mod26); 解密变换:m=D<sup>a,b</sup>(c)&equiv;a<sub>-1</sub>(c-b)(mod26)<br>
+                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;其中a,b为密钥，为满足0&le;a,b&le;25,并且a与26互质的整数；a<sub>-1</sub>是a的逆元，即a<sub>-1</sub>&sdot;a&equiv;1(mod26)。</p>
+                    已知密文ivuriffwvcuuipwucuwviuzizcahfciscvazahzeqelz,且明文开头为ans，求明文。
+                    <br>(提交最后一个单词)
+
+                </div>
+                <input type="text" class="fill-input" id="answer4" placeholder="输入答案">
+            </div>
+
+            <div class="question-card" id="question5">
+                <div class="question-header">
+                    <span class="question-number">题目5（填空题）</span>
+                    <span class="question-status">请输入答案</span>
+                </div>
+                <div class="question-text">
+                    morse密码是一种单表替换密码,密文如下表<br><img src="ms.jpeg" alt="" width="350" height="400"><br>
+                请利用此表解密以下密文：-&sdot;-&sdot; &sdot;&sdot;&sdot;&sdot; &sdot;-&sdot; -&sdot;-- &sdot;&sdot;&sdot; &sdot;- -&sdot; - &sdot;&sdot;&sdot;&sdot; &sdot; -- &sdot;&sdot;- --
+                </div>
+                <input type="text" class="fill-input" id="answer5" placeholder="输入答案">
+            </div>
+
+            <div class="question-card" id="question6">
+                <div class="question-header">
+                    <span class="question-number">题目6（填空题）</span>
+                    <span class="question-status">请输入答案</span>
+                </div>
+                <div class="question-text">
+                    对以下的加密与解密函数称为维吉尼亚密码：<br>
+                    密钥k=(k<sub>1</sub>,k<sub>2</sub>…k<sub>j</sub>)&isin;Z<sup>j</sup><sub>26</sub>,其中j表示密钥长度,记k<sub>i+j</sub>=k<sub>i</sub>;m<sub>i</sub>表示第i个明文字母，c<sub>i</sub>表示第i个密文字母，
+                    <br>则加密函数E<sub>k</sub>(m<sub>i</sub>)=m<sub>i</sub>+k<sub>i</sub>,解密函数D<sub>k</sub>(c<sub>i</sub>)=c<sub>i</sub>-k<sub>i</sub>,如下表所示。<br><img src="wj.jpeg" alt="" width="600" height="600"><br>
+                    已知密文krqcyarmqdlc<b>svpowgcxglpc</b>xerevcyjrbyrrxfkxyvpgdequwyxhyvpgdayxxqswrrijsfcbxwyjyztckvgxk 以ans开头，且密钥长度为3，求明文.<br>
+                    (提交加粗字符串)
+                </div>
+                <input type="text" class="fill-input" id="answer6" placeholder="输入答案">
+            </div>
+
+            <div class="question-card" id="question7">
+                <div class="question-header">
+                    <span class="question-number">题目7（填空题）</span>
+                    <span class="question-status">请输入答案</span>
+                </div>
+                <div class="question-text">
+                    单表古典密码体制的密文字母表实际上是明文字母表的一个排列，因此明文字母的统计规律能在密文中反映出来。由于统计的明文长度不同，明文反映的内容不同，语种不同，不同文献给出的文本频率可能略有差别。以下是英文的一些统计规律。<br>
+                    <div class="stats-card">
+    <div class="stats-title">单字母频率 (Top 26)</div>
+    <div class="stats-grid">
+        <div class="stats-column">
+            <div class="column-header">排名 1-9</div>
+            <div class="stats-item"><span class="rank">1</span><span class="symbol">E</span><span class="freq">12.70%</span></div>
+            <div class="stats-item"><span class="rank">2</span><span class="symbol">T</span><span class="freq">9.06%</span></div>
+            <div class="stats-item"><span class="rank">3</span><span class="symbol">A</span><span class="freq">8.17%</span></div>
+            <div class="stats-item"><span class="rank">4</span><span class="symbol">O</span><span class="freq">7.51%</span></div>
+            <div class="stats-item"><span class="rank">5</span><span class="symbol">I</span><span class="freq">6.97%</span></div>
+            <div class="stats-item"><span class="rank">6</span><span class="symbol">N</span><span class="freq">6.75%</span></div>
+            <div class="stats-item"><span class="rank">7</span><span class="symbol">S</span><span class="freq">6.33%</span></div>
+            <div class="stats-item"><span class="rank">8</span><span class="symbol">H</span><span class="freq">6.09%</span></div>
+            <div class="stats-item"><span class="rank">9</span><span class="symbol">R</span><span class="freq">5.99%</span></div>
+        </div>
+        <div class="stats-column">
+            <div class="column-header">排名 10-18</div>
+            <div class="stats-item"><span class="rank">10</span><span class="symbol">D</span><span class="freq">4.25%</span></div>
+            <div class="stats-item"><span class="rank">11</span><span class="symbol">L</span><span class="freq">4.03%</span></div>
+            <div class="stats-item"><span class="rank">12</span><span class="symbol">C</span><span class="freq">2.78%</span></div>
+            <div class="stats-item"><span class="rank">13</span><span class="symbol">U</span><span class="freq">2.76%</span></div>
+            <div class="stats-item"><span class="rank">14</span><span class="symbol">M</span><span class="freq">2.41%</span></div>
+            <div class="stats-item"><span class="rank">15</span><span class="symbol">W</span><span class="freq">2.36%</span></div>
+            <div class="stats-item"><span class="rank">16</span><span class="symbol">F</span><span class="freq">2.23%</span></div>
+            <div class="stats-item"><span class="rank">17</span><span class="symbol">G</span><span class="freq">2.02%</span></div>
+            <div class="stats-item"><span class="rank">18</span><span class="symbol">Y</span><span class="freq">1.97%</span></div>
+        </div>
+        <div class="stats-column">
+            <div class="column-header">排名 19-26</div>
+            <div class="stats-item"><span class="rank">19</span><span class="symbol">P</span><span class="freq">1.93%</span></div>
+            <div class="stats-item"><span class="rank">20</span><span class="symbol">B</span><span class="freq">1.49%</span></div>
+            <div class="stats-item"><span class="rank">21</span><span class="symbol">V</span><span class="freq">0.98%</span></div>
+            <div class="stats-item"><span class="rank">22</span><span class="symbol">K</span><span class="freq">0.77%</span></div>
+            <div class="stats-item"><span class="rank">23</span><span class="symbol">J</span><span class="freq">0.15%</span></div>
+            <div class="stats-item"><span class="rank">24</span><span class="symbol">X</span><span class="freq">0.15%</span></div>
+            <div class="stats-item"><span class="rank">25</span><span class="symbol">Q</span><span class="freq">0.10%</span></div>
+            <div class="stats-item"><span class="rank">26</span><span class="symbol">Z</span><span class="freq">0.05%</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-card">
+    <div class="stats-title">最常出现的双字母 (Top 30)</div>
+    <div class="stats-grid">
+        <div class="stats-column">
+            <div class="column-header">1-10</div>
+            <div class="stats-item"><span class="rank">1</span><span class="symbol">TH</span><span class="freq">3.88%</span></div>
+            <div class="stats-item"><span class="rank">2</span><span class="symbol">HE</span><span class="freq">3.68%</span></div>
+            <div class="stats-item"><span class="rank">3</span><span class="symbol">IN</span><span class="freq">2.28%</span></div>
+            <div class="stats-item"><span class="rank">4</span><span class="symbol">ER</span><span class="freq">2.17%</span></div>
+            <div class="stats-item"><span class="rank">5</span><span class="symbol">AN</span><span class="freq">2.14%</span></div>
+            <div class="stats-item"><span class="rank">6</span><span class="symbol">RE</span><span class="freq">1.75%</span></div>
+            <div class="stats-item"><span class="rank">7</span><span class="symbol">ND</span><span class="freq">1.57%</span></div>
+            <div class="stats-item"><span class="rank">8</span><span class="symbol">ON</span><span class="freq">1.42%</span></div>
+            <div class="stats-item"><span class="rank">9</span><span class="symbol">EN</span><span class="freq">1.38%</span></div>
+            <div class="stats-item"><span class="rank">10</span><span class="symbol">AT</span><span class="freq">1.33%</span></div>
+        </div>
+        <div class="stats-column">
+            <div class="column-header">11-20</div>
+            <div class="stats-item"><span class="rank">11</span><span class="symbol">OU</span><span class="freq">1.28%</span></div>
+            <div class="stats-item"><span class="rank">12</span><span class="symbol">ED</span><span class="freq">1.27%</span></div>
+            <div class="stats-item"><span class="rank">13</span><span class="symbol">HA</span><span class="freq">1.26%</span></div>
+            <div class="stats-item"><span class="rank">14</span><span class="symbol">TO</span><span class="freq">1.16%</span></div>
+            <div class="stats-item"><span class="rank">15</span><span class="symbol">OR</span><span class="freq">1.14%</span></div>
+            <div class="stats-item"><span class="rank">16</span><span class="symbol">IT</span><span class="freq">1.13%</span></div>
+            <div class="stats-item"><span class="rank">17</span><span class="symbol">IS</span><span class="freq">1.10%</span></div>
+            <div class="stats-item"><span class="rank">18</span><span class="symbol">HI</span><span class="freq">1.09%</span></div>
+            <div class="stats-item"><span class="rank">19</span><span class="symbol">ES</span><span class="freq">1.08%</span></div>
+            <div class="stats-item"><span class="rank">20</span><span class="symbol">NG</span><span class="freq">1.05%</span></div>
+        </div>
+        <div class="stats-column">
+            <div class="column-header">21-30</div>
+            <div class="stats-item"><span class="rank">21</span><span class="symbol">EA</span><span class="freq">1.00%</span></div>
+            <div class="stats-item"><span class="rank">22</span><span class="symbol">ST</span><span class="freq">0.99%</span></div>
+            <div class="stats-item"><span class="rank">23</span><span class="symbol">NT</span><span class="freq">0.98%</span></div>
+            <div class="stats-item"><span class="rank">24</span><span class="symbol">TI</span><span class="freq">0.96%</span></div>
+            <div class="stats-item"><span class="rank">25</span><span class="symbol">SE</span><span class="freq">0.95%</span></div>
+            <div class="stats-item"><span class="rank">26</span><span class="symbol">AR</span><span class="freq">0.94%</span></div>
+            <div class="stats-item"><span class="rank">27</span><span class="symbol">AL</span><span class="freq">0.92%</span></div>
+            <div class="stats-item"><span class="rank">28</span><span class="symbol">CO</span><span class="freq">0.91%</span></div>
+            <div class="stats-item"><span class="rank">29</span><span class="symbol">ME</span><span class="freq">0.89%</span></div>
+            <div class="stats-item"><span class="rank">30</span><span class="symbol">DE</span><span class="freq">0.88%</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-card">
+    <div class="stats-title">最常出现的三字母 (Top 20)</div>
+    <div class="stats-grid">
+        <div class="stats-column">
+            <div class="column-header">1-7</div>
+            <div class="stats-item"><span class="rank">1</span><span class="symbol">THE</span><span class="freq">3.51%</span></div>
+            <div class="stats-item"><span class="rank">2</span><span class="symbol">AND</span><span class="freq">1.59%</span></div>
+            <div class="stats-item"><span class="rank">3</span><span class="symbol">ING</span><span class="freq">1.15%</span></div>
+            <div class="stats-item"><span class="rank">4</span><span class="symbol">HER</span><span class="freq">0.94%</span></div>
+            <div class="stats-item"><span class="rank">5</span><span class="symbol">HAT</span><span class="freq">0.73%</span></div>
+            <div class="stats-item"><span class="rank">6</span><span class="symbol">HIS</span><span class="freq">0.70%</span></div>
+            <div class="stats-item"><span class="rank">7</span><span class="symbol">THA</span><span class="freq">0.69%</span></div>
+        </div>
+        <div class="stats-column">
+            <div class="column-header">8-14</div>
+            <div class="stats-item"><span class="rank">8</span><span class="symbol">ERE</span><span class="freq">0.68%</span></div>
+            <div class="stats-item"><span class="rank">9</span><span class="symbol">FOR</span><span class="freq">0.67%</span></div>
+            <div class="stats-item"><span class="rank">10</span><span class="symbol">ENT</span><span class="freq">0.66%</span></div>
+            <div class="stats-item"><span class="rank">11</span><span class="symbol">ION</span><span class="freq">0.66%</span></div>
+            <div class="stats-item"><span class="rank">12</span><span class="symbol">TER</span><span class="freq">0.64%</span></div>
+            <div class="stats-item"><span class="rank">13</span><span class="symbol">WAS</span><span class="freq">0.62%</span></div>
+            <div class="stats-item"><span class="rank">14</span><span class="symbol">YOU</span><span class="freq">0.61%</span></div>
+        </div>
+        <div class="stats-column">
+            <div class="column-header">15-20</div>
+            <div class="stats-item"><span class="rank">15</span><span class="symbol">ITH</span><span class="freq">0.59%</span></div>
+            <div class="stats-item"><span class="rank">16</span><span class="symbol">VER</span><span class="freq">0.58%</span></div>
+            <div class="stats-item"><span class="rank">17</span><span class="symbol">ALL</span><span class="freq">0.56%</span></div>
+            <div class="stats-item"><span class="rank">18</span><span class="symbol">HEA</span><span class="freq">0.55%</span></div>
+            <div class="stats-item"><span class="rank">19</span><span class="symbol">NCE</span><span class="freq">0.54%</span></div>
+            <div class="stats-item"><span class="rank">20</span><span class="symbol">TIO</span><span class="freq">0.53%</span></div>
+        </div>
+    </div>
+</div>
+            以下是密文：<br>
+                    LGGK VHZXJ RP VJJCEVO CK ZMX MGEXO C SCLDGEXJXS
+
+                    LGRX IVIXJL CK ZMX IGDQXZ GH ZMX SJXLL UMCDM C MVS
+
+                    ZVQXK HJGR PGBJ <B>OVWGJVZGJP</B>. VZ HCJLZ C MVS
+
+                    KXNOXDZXS ZMXR, WBZ KGU ZMVZ C UVL VWOX ZG SXDCIMXJ
+
+                    ZMX DMVJVDZXJL CK UMCDM ZMXP UXJX UJCZZXK, C
+
+                    WXNVK ZG LZBSP ZMXR UCZM SCOCNXKDX.<br>
+        以下是字母出现次数：<br>
+        <table border="0" cellpadding="5" style="color:#ddd; background:rgba(0,0,0,0.5); margin:10px 0;">
+            <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th><th>N</th><th>O</th><th>P</th><th>Q</th><th>R</th><th>S</th><th>T</th><th>U</th><th>V</th><th>W</th><th>X</th><th>Y</th><th>Z</th></tr>
+            <tr><td>00</td><td>03</td><td>18</td><td>09</td><td>03</td><td>00</td><td>14</td><td>04</td><td>04</td><td>16</td><td>10</td><td>10</td><td>18</td><td>03</td><td>06</td><td>05</td><td>02</td><td>05</td><td>09</td><td>00</td><td>07</td><td>16</td><td>04</td><td>29</td><td>00</td><td>24</td></tr>
+        </table>
+        求明文。（提交加粗字符串）    
+                </div>
+                <input type="text" class="fill-input" id="answer7" placeholder="输入答案">
+            </div>
+        </div>
+        <!-- 统一提交区域 -->
+        <div class="submit-area">
+            <button class="btn-submit-all" id="submitAllBtn">提交所有答案</button>
+            <div class="result-message" id="resultMessage"></div>
+            <button class="retry-test-btn" id="retryTestBtn">重新尝试答题</button>
+        </div>
+
+        <!-- 完成提示（默认隐藏） -->
+        <div class="completion-message" id="completionMessage" style="display: none;">
+            <h2>恭喜通过测试！</h2>
+            <p>你已成功完成《古典密码测试》</p>
+            <a href="main.html" class="btn-return">返回课程列表</a>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const STORAGE_KEY = 'crypto_chapter_progress';
+        const DRAFT_KEY = 'crypto_chapter_drafts';
+        const TEST_MAX_KEY = 'crypto_test_max';
+        const CHAPTER_NAME = '古典密码测试';
+        const TOTAL_QUESTIONS = 7;
+
+        // 正确答案配置（根据实际题目内容设定）
+        const correctAnswers = {
+            1: '4',   // 选择题答案 security
+            2: 'gudianmima',   // 栅栏密码答案
+            3: 'follies',
+            4: 'tumult',
+            5: 'chrysanthemum',
+            6: 'irresistible',
+            7: 'laboratory',
+        };
+
+        // 题目完成状态
+        let testCompleted = false;
+        let maxCorrect = 0; // 历史最高正确数
+        
+        // 草稿状态（未提交的选项/输入）
+        let drafts = {
+            1: null,  // 选择题：存储选中的value
+            2: '',    // 填空题：存储输入的内容
+            3: '',
+            4: '',
+            5: '',
+            6: '',
+            7: '',
+        };
+
+        // ==================== 页面加载 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTestStatus();
+            loadMaxCorrect();
+            loadDrafts();
+            restoreDrafts();
+            setupDraftListeners();
+        });
+
+        // 加载测试状态（是否已完成）
+        function loadTestStatus() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const progress = JSON.parse(saved);
+                    if (progress[CHAPTER_NAME] && progress[CHAPTER_NAME].current === TOTAL_QUESTIONS) {
+                        testCompleted = true;
+                        document.getElementById('testStatus').textContent = '已完成';
+                        document.getElementById('progressText').textContent = `${TOTAL_QUESTIONS}/${TOTAL_QUESTIONS} 已完成`;
+                        document.getElementById('submitAllBtn').disabled = true;
+                        document.getElementById('completionMessage').style.display = 'block';
+                        // 禁用所有输入
+                        disableAllInputs(true);
+                    } else {
+                        // 显示当前正确数（如果有保存的未完成正确数）
+                        const currentCorrect = progress[CHAPTER_NAME] ? progress[CHAPTER_NAME].current : 0;
+                        document.getElementById('progressText').textContent = `${currentCorrect}/${TOTAL_QUESTIONS} 已完成`;
+                        if(currentCorrect === TOTAL_QUESTIONS) testCompleted = true; // 防御
+                    }
+                }
+            } catch (e) {
+                console.error('加载状态失败:', e);
+            }
+        }
+
+        // 加载历史最高正确数
+        function loadMaxCorrect() {
+            try {
+                const saved = localStorage.getItem(TEST_MAX_KEY);
+                if (saved) {
+                    maxCorrect = parseInt(saved) || 0;
+                }
+                document.getElementById('maxCorrectText').textContent = `${maxCorrect}/${TOTAL_QUESTIONS}`;
+            } catch (e) {
+                console.error('加载最高正确数失败:', e);
+            }
+        }
+
+        // 保存最高正确数
+        function saveMaxCorrect(correctCount) {
+            if (correctCount > maxCorrect) {
+                maxCorrect = correctCount;
+                localStorage.setItem(TEST_MAX_KEY, maxCorrect.toString());
+                document.getElementById('maxCorrectText').textContent = `${maxCorrect}/${TOTAL_QUESTIONS}`;
+            }
+        }
+
+        // 加载草稿
+        function loadDrafts() {
+            try {
+                const draftsSaved = localStorage.getItem(DRAFT_KEY);
+                if (draftsSaved) {
+                    const allDrafts = JSON.parse(draftsSaved);
+                    if (allDrafts[CHAPTER_NAME]) {
+                        drafts = allDrafts[CHAPTER_NAME];
+                    }
+                }
+            } catch (e) {
+                console.error('加载草稿失败:', e);
+            }
+        }
+
+        // 保存草稿
+        function saveDrafts() {
+            if(testCompleted) return; // 已完成情况下不再保存草稿（避免覆盖禁用状态）
+            try {
+                // 收集当前界面的草稿
+                const selected = document.querySelector('input[name="q1"]:checked');
+                if (selected) {
+                    drafts[1] = selected.value;
+                } else {
+                    drafts[1] = null;
+                }
+                
+                for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                    const input = document.getElementById(`answer${i}`);
+                    if (input) {
+                        drafts[i] = input.value;
+                    }
+                }
+                
+                let allDrafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+                allDrafts[CHAPTER_NAME] = drafts;
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(allDrafts));
+            } catch (e) {
+                console.error('保存草稿失败:', e);
+            }
+        }
+
+        // 恢复草稿到界面
+        function restoreDrafts() {
+            if(testCompleted) return;
+            if (drafts[1]) {
+                const radioToCheck = document.querySelector(`input[name="q1"][value="${drafts[1]}"]`);
+                if (radioToCheck) {
+                    radioToCheck.checked = true;
+                }
+            }
+            for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                const input = document.getElementById(`answer${i}`);
+                if (input && drafts[i] !== undefined) {
+                    input.value = drafts[i];
+                }
+            }
+        }
+
+        // 设置草稿监听器
+        function setupDraftListeners() {
+            if(testCompleted) return;
+            const radioButtons = document.querySelectorAll('input[name="q1"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    saveDrafts();
+                });
+            });
+            for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                const input = document.getElementById(`answer${i}`);
+                if (input) {
+                    input.addEventListener('input', () => {
+                        saveDrafts();
+                    });
+                }
+            }
+        }
+
+        // 禁用/启用所有输入
+        function disableAllInputs(disabled) {
+            document.querySelectorAll('input[name="q1"]').forEach(radio => {
+                radio.disabled = disabled;
+            });
+            for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                const input = document.getElementById(`answer${i}`);
+                if (input) {
+                    input.disabled = disabled;
+                }
+            }
+        }
+
+        // 更新进度显示（仅用于提交后部分正确时更新上方已完成数字）
+        function updateProgressDisplay(correctCount) {
+            document.getElementById('progressText').textContent = `${correctCount}/${TOTAL_QUESTIONS} 已完成`;
+            // 同时保存当前正确数到进度（非完成状态，仅记录，避免影响已完成标记）
+            if(!testCompleted && correctCount < TOTAL_QUESTIONS) {
+                try {
+                    let progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                    if (!progress[CHAPTER_NAME]) progress[CHAPTER_NAME] = { current: 0, total: TOTAL_QUESTIONS };
+                    progress[CHAPTER_NAME].current = correctCount;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+                } catch(e) {}
+            }
+        }
+
+        // ==================== 提交所有答案 ====================
+        document.getElementById('submitAllBtn').addEventListener('click', function() {
+            if (testCompleted) {
+                alert('测试已经完成，无需重复提交');
+                return;
+            }
+
+            // 检查是否所有题目都已作答
+            let allAnswered = true;
+            let missingQuestions = [];
+
+            const choiceSelected = document.querySelector('input[name="q1"]:checked');
+            if (!choiceSelected) {
+                allAnswered = false;
+                missingQuestions.push(1);
+            }
+
+            for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                const input = document.getElementById(`answer${i}`);
+                if (!input || !input.value.trim()) {
+                    allAnswered = false;
+                    missingQuestions.push(i);
+                }
+            }
+
+            if (!allAnswered) {
+                alert(`请先完成所有题目！未作答的题目：${missingQuestions.join('、')}`);
+                return;
+            }
+
+            // 获取所有答案并判断对错
+            let correctCount = 0;
+
+            const q1Value = document.querySelector('input[name="q1"]:checked').value;
+            if (q1Value === correctAnswers[1]) correctCount++;
+
+            for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                const input = document.getElementById(`answer${i}`);
+                const userAnswer = input.value.trim().toLowerCase();
+                if (userAnswer === correctAnswers[i].toLowerCase()) correctCount++;
+            }
+
+            // 更新最高正确数
+            saveMaxCorrect(correctCount);
+
+            const resultDiv = document.getElementById('resultMessage');
+            const progressTextSpan = document.getElementById('progressText');
+            const retryBtn = document.getElementById('retryTestBtn');
+            
+            if (correctCount === TOTAL_QUESTIONS) {
+                // 全部正确
+                resultDiv.className = 'result-message result-success';
+                resultDiv.textContent = `恭喜！全部答对！ (${correctCount}/${TOTAL_QUESTIONS})`;
+                
+                // 标记测试为完成
+                testCompleted = true;
+                document.getElementById('testStatus').textContent = '已完成';
+                document.getElementById('submitAllBtn').disabled = true;
+                document.getElementById('completionMessage').style.display = 'block';
+                progressTextSpan.textContent = `${TOTAL_QUESTIONS}/${TOTAL_QUESTIONS} 已完成`;
+                
+                // 禁用所有输入
+                disableAllInputs(true);
+                // 隐藏重试按钮
+                retryBtn.style.display = 'none';
+                // 保存完成进度
+                saveProgress();
+                // 清除当前章节草稿（已完成测试不需要保留草稿）
+                try {
+                    let allDrafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+                    delete allDrafts[CHAPTER_NAME];
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(allDrafts));
+                } catch(e) {}
+            } else if (correctCount > 0) {
+                resultDiv.className = 'result-message result-partial';
+                resultDiv.textContent = `答对 ${correctCount}/${TOTAL_QUESTIONS} 题，继续努力！`;
+                updateProgressDisplay(correctCount);
+                retryBtn.style.display = 'inline-block';
+            } else {
+                resultDiv.className = 'result-message result-error';
+                resultDiv.textContent = `全部错误，再试试吧！`;
+                updateProgressDisplay(0);
+                retryBtn.style.display = 'inline-block';
+            }
+        });
+
+        // 保存进度到 localStorage (全部正确时调用)
+        function saveProgress() {
+            try {
+                let progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                progress[CHAPTER_NAME] = {
+                    current: TOTAL_QUESTIONS,
+                    total: TOTAL_QUESTIONS
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+                
+                if (window.opener && window.opener.ProgressManager) {
+                    window.opener.ProgressManager.refreshDisplay();
+                }
+                window.dispatchEvent(new Event('storage'));
+                console.log('测试进度保存成功');
+            } catch (e) {
+                console.error('保存进度失败:', e);
+            }
+        }
+
+        // 重置测试（重新尝试答题）
+        window.resetTest = function() {
+            if (testCompleted) {
+                if (!confirm('测试已完成，确定要重新尝试答题吗？这将清除当前答案。')) return;
+            } else {
+                if (!confirm('确定要重新尝试答题吗？所有答案将被清空。')) return;
+            }
+            
+            // 清空所有输入
+            document.querySelectorAll('input[name="q1"]').forEach(radio => { radio.checked = false; });
+            for (let i = 2; i <= TOTAL_QUESTIONS; i++) {
+                const input = document.getElementById(`answer${i}`);
+                if (input) input.value = '';
+            }
+            
+            // 重置草稿
+            drafts = { 1: null, 2: '', 3: '', 4: '', 5: '', 6: '', 7: '' };
+            saveDrafts();
+            
+            // 启用所有输入
+            disableAllInputs(false);
+            
+            // 重置状态变量
+            testCompleted = false;
+            document.getElementById('testStatus').textContent = '未完成';
+            document.getElementById('submitAllBtn').disabled = false;
+            document.getElementById('completionMessage').style.display = 'none';
+            document.getElementById('progressText').textContent = '0/7 已完成';
+            document.getElementById('resultMessage').className = 'result-message';
+            document.getElementById('resultMessage').textContent = '';
+            document.getElementById('retryTestBtn').style.display = 'none';
+            
+            // 清除进度（重置当前正确数，但不影响最高正确数）
+            try {
+                let progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                if (progress[CHAPTER_NAME]) {
+                    progress[CHAPTER_NAME].current = 0;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+                }
+                if (window.opener && window.opener.ProgressManager) window.opener.ProgressManager.refreshDisplay();
+                window.dispatchEvent(new Event('storage'));
+            } catch (e) {
+                console.error('清除进度失败:', e);
+            }
+            
+            alert('已重置，可以重新尝试答题');
+        };
+
+        document.getElementById('retryTestBtn').addEventListener('click', function() {
+            window.resetTest();
+        });
+
+        // 返回按钮点击时保存草稿
+        document.getElementById('backBtn').addEventListener('click', function(e) {
+            if(!testCompleted) saveDrafts();
+        });
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_KEY) {
+                loadTestStatus();
+            } else if (e.key === TEST_MAX_KEY) {
+                loadMaxCorrect();
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if(!testCompleted) saveDrafts();
+        });
+    </script>
+</body>
+</html>
